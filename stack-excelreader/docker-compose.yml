@@ -1,0 +1,18 @@
+version: "3"
+services: 
+  excel:
+    image: mysql:latest
+    restart: "no"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - "${MYSQL_HOST_PORT}:${MYSQL_CONTAINER_PORT}"
+    volumes: 
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  adminer:
+    image: adminer:latest
+    restart: "no"
+    ports:
+      - "${ADMINER_HOST_PORT}:${ADMINER_CONTAINER_PORT}"
+      
