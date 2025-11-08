@@ -6,6 +6,7 @@ import java.util.Properties;
 import com.iesvdc.dam.acceso.conexion.Conexion;
 import com.iesvdc.dam.acceso.conexion.Config;
 import com.iesvdc.dam.acceso.excelutil.ExcelReader;
+import com.iesvdc.dam.acceso.excelutil.ExcelWriter;
 import com.iesvdc.dam.acceso.modelo.WorkbookModel;
 
 /**
@@ -34,11 +35,21 @@ public class Excel2Database
 
 
         //TO-DO si la accion es LOAD:
-        ExcelReader reader = new ExcelReader();
-        reader.loadWorbook(props.getProperty("file"));
-        //System.out.println(reader.generateDDL());
-        System.out.println(reader.executeDDL());
-        //System.out.println(reader.executeInserts());
+        if (props.getProperty("action").equals("load")) {
+            System.out.println("Estas insertando datos en la base de datos");
+            ExcelReader reader = new ExcelReader();
+            reader.loadWorbook(props.getProperty("file"));
+            System.out.println(reader.generateDDL());
+            System.out.println(reader.executeDDL());
+            System.out.println(reader.insertDDL());
+        }
+
+        //Si la accion es SAVE:
+        if (props.getProperty("action").equals("save")) {
+            System.out.println("Esta guardando datos de la base datos");
+            ExcelWriter writer = new ExcelWriter();
+            
+        }
 
         //Test de conexion
         try (Connection conexion = Conexion.getConnection()) {

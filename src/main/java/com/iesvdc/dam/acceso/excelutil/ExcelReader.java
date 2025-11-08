@@ -3,6 +3,7 @@ package com.iesvdc.dam.acceso.excelutil;
 import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.apache.poi.ss.usermodel.Cell;
@@ -128,120 +129,89 @@ public class ExcelReader {
         return sqlSB.toString();
     }
     public boolean executeDDL(){
-        StringBuilder sb;
         boolean resultado = true;
 
         conexion = Conexion.getConnection();
         if ((conexion== null)) {
             
         }
-
-        for (TableModel tabla : wbm.getTables()) {
-            sb = new StringBuilder();
-            sb.append("CREATE TABLE `");
-            sb.append(tabla.getName());
-            sb.append("` (");
-            int nCampos = tabla.getFields().size();
-            for (FieldModel campo : tabla.getFields()) { 
-                nCampos--;
-                sb.append("`");
-                sb.append(campo.getName());
-                sb.append("` ");
-                sb.append(getSQLType(campo.getType()));
-                if (nCampos > 0) sb.append(", "); 
-            }
-            sb.append(");");
-
-            try {
-                Statement stm = conexion.createStatement();
-                stm.execute(sb.toString());
-            } catch (Exception e) {
-                e.getLocalizedMessage();
-            }
-           
+    
+        try (Statement stm = conexion.createStatement()){
+            String ddl = generateDDL();
+            stm.execute(ddl);
+        } catch (Exception e) {
+            e.getLocalizedMessage();
         }
         return resultado;
     }
+    
 
-    private String getSQLType(FieldType type) {
-    switch (type) {
-        case INTEGER:
-            return "INT";
-        case DECIMAL:
-            return "DOUBLE";
-        case STRING:
-            return "VARCHAR(150)";
-        case DATE:
-            return "DATE";
-        case BOOLEAN:
-            return "BOOLEAN";
-        default:
-            return "TEXT";
-    }
-}
-/*
-public boolean executeInserts() {
-    boolean resultado = true;
+public boolean insertDDL(){
     conexion = Conexion.getConnection();
-    if (conexion == null) {
-        System.err.println("No se pudo establecer la conexión con la base de datos");
-        return false;
+
+    if ((conexion== null)) {
+            
     }
+    boolean insertado = true;
 
     try {
-        // Recorremos todas las hojas del workbook original (wb)
-        for (int i = 0; i < wb.getNumberOfSheets(); i++) {
+        for (int i = 0; i < wb.getNumberOfSheets(); i++){
             Sheet hoja = wb.getSheetAt(i);
-            String nombreTabla = hoja.getSheetName();
+            String tabla = hoja.getSheetName();
 
-            // La primera fila son los nombres de columnas
-            Row encabezado = hoja.getRow(0);
-            int numColumnas = encabezado.getLastCellNum();
+            Row cabecera = hoja.getRow(0);
+            int columns  = cabecera.getLastCellNum();
 
-            // Preparamos la sentencia SQL dinámica con parámetros
-            StringBuilder sbCampos = new StringBuilder();
-            StringBuilder sbParametros = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
+            sb.append("INSERT INTO `").append(tabla).append("` (");
 
-            for (int col = 0; col < numColumnas; col++) {
-                String nombreCampo = encabezado.getCell(col).getStringCellValue();
-                sbCampos.append("`").append(nombreCampo).append("`");
-                sbParametros.append("?");
-
-                if (col < numColumnas - 1) {
-                    sbCampos.append(", ");
-                    sbParametros.append(", ");
+            for (int j = 0; j < columns; j++) {
+                String campo = cabecera.getCell(j).getStringCellValue();
+                sb.append("`").append(campo).append("`");
+                if (j < columns - 1) {
+                    sb.append(", ");
                 }
             }
+            sb.append(") VALUES (");
+            
+            for (int k = 0; k < columns; k++) {
+                sb.append("?");
+                if (k < columns - 1) {
+                    sb.append(", ");
+                }
+            }
+            
+            sb.append(")");
+            String sentencia = sb.toString();
 
-            String sql = "INSERT INTO `" + nombreTabla + "` (" + sbCampos + ") VALUES (" + sbParametros + ")";
-            System.out.println("Plantilla SQL preparada: " + sql);
+            for (int j = 2; j < hoja.getPhysicalNumberOfRows(); j++) {
+                Row filactual = hoja.getRow(j);
+                if (filactual == null) {
+                    System.out.println("Esta fila " + j + " es nula");
+                    continue;
+                }
 
-            // Iteramos desde la tercera fila (índice 2)
-            for (int fila = 2; fila <= hoja.getLastRowNum(); fila++) {
-                Row filaActual = hoja.getRow(fila);
-                if (filaActual == null) continue;
-
-                try (PreparedStatement ps = conexion.prepareStatement(sql)) {
-                    for (int col = 0; col < numColumnas; col++) {
-                        Cell celda = filaActual.getCell(col);
-                        asignarValorParametro(ps, col + 1, celda);
+                try (PreparedStatement stm = conexion.prepareStatement(sentencia)){
+                    for (int k = 0; k < columns; k++) {
+                        Cell celda = filactual.getCell(k);
+                        asignarValorSQL(stm, k + 1, celda);
                     }
-                    ps.executeUpdate();
+                    stm.executeUpdate();
                 } catch (Exception e) {
-                    System.err.println("Error insertando fila " + fila + " en " + nombreTabla + ": " + e.getMessage());
-                    resultado = false;
+                    e.getLocalizedMessage();
+                    insertado = false;
                 }
             }
+
         }
     } catch (Exception e) {
-        System.err.println("Error general en inserciones: " + e.getMessage());
-        resultado = false;
+        e.getLocalizedMessage();
+        insertado = false;
     }
-
-    return resultado;
+    return insertado;
 }
 
-private void asignarValorParametro(PreparedStatement ps, int indice, Cell celda) throws Exception {
+private void asignarValorSQL(PreparedStatement ps, int indice, Cell celda) throws SQLException {
     if (celda == null) {
         ps.setNull(indice, java.sql.Types.NULL);
         return;
@@ -258,7 +228,7 @@ private void asignarValorParametro(PreparedStatement ps, int indice, Cell celda)
                 ps.setDate(indice, new java.sql.Date(fecha.getTime()));
             } else {
                 double valor = celda.getNumericCellValue();
-                if (Math.abs(valor - Math.floor(valor)) < 1e-10)
+                if (Math.abs(valor - Math.floor(valor)) < EPSILON)
                     ps.setInt(indice, (int) valor);
                 else
                     ps.setDouble(indice, valor);
@@ -277,5 +247,5 @@ private void asignarValorParametro(PreparedStatement ps, int indice, Cell celda)
             ps.setNull(indice, java.sql.Types.NULL);
     }
 }
- */
+
 }
