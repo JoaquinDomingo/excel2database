@@ -209,7 +209,7 @@ public class ExcelUtils {
  private static void  insertarRegistro(Connection connection, String nombre,
     String apellido) throws SQLException {
         String insert = "INSERT INTO personas (nombre, apellido)" +
-        "VALUES (Joselito, Escobar)";
+        "VALUES (Joaquin, Domingo)";
         try (PreparedStatement statement = connection.prepareStatement(insert)){
             prepareStatement.setString(1, nombre);
             prepareStatement.setString(2, apellido);
