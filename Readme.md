@@ -10,8 +10,6 @@ Uso del programa:
 ```bash
 excel2database -f fichero.xlsx -db agenda
 ```
-## Como instalar Java para que funcione el proyecto
-
 
 ##  Como crear un proyecto Maven
 
