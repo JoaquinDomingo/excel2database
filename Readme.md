@@ -322,24 +322,35 @@ SELECT * FROM `personas` LIMIT 50 OFFSET 10;
 ```
 ## Estructura del proyecto
 
-- `Readme.md` — documentación del proyecto.
-- `config.properties` — configuración (NO usar en producción; contiene credenciales de ejemplo).
-- `pom.xml` — proyecto y dependencias Maven.
-- `datos/` — archivos de entrada/salida (entrada.xlsx, salida.xlsx).
-- `src/main/java/com/iesvdc/dam/acceso/`:
-    - `Excel2Database.java`
-    - `conexion/`
-        - `Conexion.java`
-         `Config.java`
-    - `excelutil/`
-        - `ExcelReader.java`
-    - `modelo/`
-        - `FieldModel.java`
-        - `FieldType.java`
-        - `TableModel.java`
-        - `WorkbookModel.java`
-- `test/` — pruebas unitarias.
-- `stack-exelreader/` — docker-compose y scripts para la BD (init.sql).
-- `target/` — artefactos de compilación (no versionar).
 
-Estructura mínima: solo archivos y rutas importantes, sin descripciones extensas.
+- `Readme.md` — documentación del proyecto (este fichero).
+- `config.properties` — archivo de configuración con parámetros de conexión y rutas (ejemplo, NO usar en producción).
+- `pom.xml` — descriptor Maven con dependencias y configuración de build.
+- `datos/`
+    - `personas.xlsx` — fichero Excel de entrada .
+    - `personasdesdebdat.xlsx` — fichero Excel de salida.
+- `src/main/java/com/iesvdc/dam/acceso/`
+    - `Excel2Database.java` — clase principal que orquesta la lectura del Excel y el volcado a la base de datos y viceversa.
+    - `conexion/`
+        - `Conexion.java` — utilidades para obtener la conexión JDBC a MySQL.
+        - `Config.java` — carga y parseo de `config.properties` en `Properties`.
+    - `excelutil/`
+        - `ExcelReader.java` — lectura del fichero .xlsx; detecta tipos de campo, hojas y construye modelos.
+        - `ExcelWriter.java` — lectura de la base de datos, detecta los datos, y los introduce a un nuevo .xlsx
+    - `modelo/`
+        - `WorkbookModel.java` — modelo que representa el libro (workbook) con sus tablas/hojas.
+        - `TableModel.java` — modelo que representa una hoja/tabla (nombre, lista de campos).
+        - `FieldModel.java` — modelo que representa un campo/columna (nombre, tipo, posición, posible metadato).
+        - `FieldType.java` — enum o clase que define los tipos de campo reconocidos (Texto, Entero, Decimal, Fecha, Booleano, etc.).
+- `test/java/com/iesvdc/dam/acceso/AppTest.java`
+- `stack-excelreader/`
+    - `docker-compose.yml` — composición Docker (por ejemplo, contenedor MySQL) para desarrollo/pruebas.
+    - `db/init.sql` — script SQL para inicializar la base de datos y tablas de ejemplo.
+- `target/` — salida del build Maven (artefactos compilados). Esta carpeta se genera automáticamente y no debe versionarse.
+
+## Autor
+
+- Nombre: Joaquín Domingo Domingo
+- GitHub: `@JoaquinDomingo`
+- Correo de contacto: `dojoaquindo@gmail.com`
+
