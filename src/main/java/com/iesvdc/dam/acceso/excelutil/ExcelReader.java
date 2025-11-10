@@ -165,7 +165,7 @@ public class ExcelReader {
 
         return sqlSB.toString();
     }
-    
+
     private String SQLType(FieldType type) {
     switch (type) {
         case STRING:
@@ -207,7 +207,6 @@ public class ExcelReader {
             for (String sql : statements) {
                 sql = sql.trim();
                 if (!sql.isEmpty()) {
-                    System.out.println("Ejecutando SQL: " + sql); // útil para depuración
                     stm.execute(sql);
                 }
         }
