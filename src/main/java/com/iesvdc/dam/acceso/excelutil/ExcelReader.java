@@ -155,7 +155,7 @@ public class ExcelReader {
                 sqlSB.append(fieldModel.getName());
                 sqlSB.append("`");
                 sqlSB.append(" ");
-                sqlSB.append(fieldModel.getType().toString());
+                sqlSB.append(SQLType(fieldModel.getType()));
                 if (nCampos >0) {
                     sqlSB.append(", ");
                 }
@@ -165,6 +165,24 @@ public class ExcelReader {
 
         return sqlSB.toString();
     }
+    
+    private String SQLType(FieldType type) {
+    switch (type) {
+        case STRING:
+            return "VARCHAR(150)";
+        case INTEGER:
+            return "INT";
+        case DECIMAL:
+            return "DOUBLE";
+        case DATE:
+            return "DATE";
+        case BOOLEAN:
+            return "BOOLEAN";
+        default:
+            return "TEXT";
+    }
+}
+
     /**
      * Método público con el cual ejecutaremos la sentencia SQL
      * generada en el método generateDDL(), con este método
@@ -184,7 +202,15 @@ public class ExcelReader {
     
         try (Statement stm = conexion.createStatement()){
             String ddl = generateDDL();
-            stm.execute(ddl);
+            String[] statements = ddl.split(";");
+
+            for (String sql : statements) {
+                sql = sql.trim();
+                if (!sql.isEmpty()) {
+                    System.out.println("Ejecutando SQL: " + sql); // útil para depuración
+                    stm.execute(sql);
+                }
+        }
         } catch (Exception e) {
             e.getLocalizedMessage();
         }
