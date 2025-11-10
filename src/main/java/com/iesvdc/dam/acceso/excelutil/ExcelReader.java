@@ -33,7 +33,6 @@ import java.sql.Types;
  */
 public class ExcelReader {
 
-    private Types type; 
     private Workbook wb;
 
     private Connection conexion;
